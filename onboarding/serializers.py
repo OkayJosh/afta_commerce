@@ -9,7 +9,7 @@ class BusinessSerializers(ModelSerializer):
         fields = [
             'name', 'user', 'industry',
             'description', 'address', 'contact_number',
-            'cac', 'compliance',
+            'cac', 'compliance', 'id'
         ]
 
 
@@ -19,5 +19,5 @@ class ProductSerializers(ModelSerializer):
         fields = [
             'name', 'business',
             'description', 'price',
-            'quantity',
+            'quantity', 'id'
         ]
