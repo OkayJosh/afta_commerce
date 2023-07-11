@@ -43,7 +43,7 @@ class LoginView(ObtainAuthToken):
         device_name = serializer.validated_data.get('device_name', None)
         device_id = serializer.validated_data.get('device_id', None)
         token, created = Token.objects.get_or_create(user=user)
-        user.logged_devices.create(device_name=device_name, device_id=device_id, token=token)
+        # user.logged_devices.create(device_name=device_name, device_id=device_id, token=token)
 
         return Response({
             'token': token.key,

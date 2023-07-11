@@ -1,7 +1,9 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from users.models import User
 from users.services import UserService
 from password_strength import PasswordPolicy
 
@@ -12,8 +14,8 @@ class SignupSerializer(serializers.Serializer):
     account_type = serializers.CharField(required=False)
     channel = serializers.CharField(required=False)
     fcmb_token = serializers.CharField(required=False)
-    username = serializers.CharField(required=False)
-    privacy = serializers.BooleanField(required=True)
+    username = serializers.CharField(required=True)
+    privacy = serializers.BooleanField(required=False)
 
     def validate(self, attrs):
         email = attrs.get('email')
@@ -52,6 +54,34 @@ class AuthTokenSerializer(serializers.Serializer):
     remember_me = serializers.BooleanField(default=False, write_only=True)
     device_name = serializers.CharField(max_length=255, allow_blank=False, required=True)
     device_id = serializers.CharField(max_length=255, allow_blank=False, required=True)
+    token = serializers.CharField(
+        read_only=True
+    )
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        username = User.objects.filter(email=email)
+
+        if not username.exists():
+            msg = 'Unable to log in with provided credentials.'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        username = username.first()
+
+        if email and password:
+            user = authenticate(request=self.context.get('request'),
+                                username=username, password=password)
+            if not user:
+                msg = 'Unable to log in with provided credentials.'
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = 'Must include "email" and "password".'
+            raise serializers.ValidationError(msg, code='authorization')
+
+        attrs['user'] = user
+        return attrs
 
 
 class ChangePasswordSerializer(serializers.Serializer):
